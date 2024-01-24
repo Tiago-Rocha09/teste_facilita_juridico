@@ -1,5 +1,9 @@
 # Teste Facilita Jurídico
 
+## Banco de dados
+
+O arquivo database.sql na raíz do projeto possui o script para criação da tabela customers e todos os objetos relacionados a ela
+
 ## Instalação
 
 Certifique-se de ter o Node.js e o npm instalados em sua máquina.
@@ -38,3 +42,5 @@ Este aplicativo foi desenvolvido e testado nas seguintes versões do ambiente:
 
 - Node.js: v18.19.0
 - npm: v10.2.3
+- PostgreSQL 12.17
+- Ubuntu 20.04.6
