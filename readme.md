@@ -24,7 +24,7 @@ npm install
 
 ## Executando o App
 
-1. Inicie o aplicativo Next.js:
+1. Inicie o aplicativo:
 
 ```bash
 npm run dev
