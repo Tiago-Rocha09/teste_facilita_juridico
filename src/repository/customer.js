@@ -66,11 +66,9 @@ export default class CustomerRepository {
     const visitedCustomers = [];
     let totalDistance = 0;
 
-    // Add the starting customer to visited customers
     visitedCustomers.push(noVisitedCustomers.shift());
 
     while (noVisitedCustomers.length > 0) {
-      // Find the unvisited customer with the shortest distance to the company
       const currentCustomer = noVisitedCustomers.reduce(
         (minCustomer, customer) => {
           return customer.distanceToCompany < minCustomer.distanceToCompany
@@ -80,13 +78,11 @@ export default class CustomerRepository {
         noVisitedCustomers[0]
       );
 
-      // Iterate through adjacent customers
       for (const adjacentCustomer of currentCustomer.distanceToOthers) {
         const otherCustomer = customers.find(
           (item) => item.id === adjacentCustomer.customerId
         );
 
-        // Update distance to company if shorter
         if (
           otherCustomer.distanceToCompany >
           currentCustomer.distanceToCompany + adjacentCustomer.distance
@@ -96,7 +92,6 @@ export default class CustomerRepository {
         }
       }
 
-      // Mark current customer as visited
       visitedCustomers.push(currentCustomer);
 
       const previousCustomer = visitedCustomers[visitedCustomers.length - 2];
@@ -106,7 +101,6 @@ export default class CustomerRepository {
 
       totalDistance += distanceBetweenCustomers;
 
-      // Remove current customer from noVisitedCustomers
       const index = noVisitedCustomers.indexOf(currentCustomer);
       if (index !== -1) {
         noVisitedCustomers.splice(index, 1);

@@ -9,7 +9,6 @@ async function getCustomers(req, res) {
     const customers = await customerService.getCustomers(req.query);
     res.json(customers);
   } catch (error) {
-    console.log({ error });
     res.status(500).json({ message: "Erro ao buscar cliente" });
   }
 }
@@ -28,7 +27,6 @@ async function getBestRoute(req, res) {
     const customers = await customerService.getBestRoute(req.query);
     res.json(customers);
   } catch (error) {
-    console.log({ error });
     res.status(500).json({ message: "Erro ao buscar a melhor rota" });
   }
 }
