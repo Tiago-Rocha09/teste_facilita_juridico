@@ -1,6 +1,10 @@
 import express from "express";
 import { checkSchema, validationResult } from "express-validator";
-import { getCustomers, createCustomer } from "../controllers/customer.js";
+import {
+  getCustomers,
+  createCustomer,
+  getBestRoute,
+} from "../controllers/customer.js";
 import { createCustomerSchema } from "../schemas/customers.js";
 
 const customersRoutes = express.Router();
@@ -17,5 +21,7 @@ customersRoutes.post("/", checkSchema(createCustomerSchema), (req, res) => {
   }
   return createCustomer(req, res);
 });
+
+customersRoutes.get("/best-route", getBestRoute);
 
 export default customersRoutes;

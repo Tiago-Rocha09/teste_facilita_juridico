@@ -8,7 +8,7 @@ const createCustomerSchema = {
         return parts?.length >= 2;
       },
     },
-    errorMessage: "Seu nome completo é obrigatório",
+    errorMessage: "O nome completo é obrigatório",
   },
   email: { isEmail: true, errorMessage: "Email inválido" },
   phone: {
@@ -19,6 +19,24 @@ const createCustomerSchema = {
       },
     },
     errorMessage: "Número de telefone válido é obrigatório.",
+  },
+  coordinateX: {
+    custom: {
+      options: (value) => {
+        const numericValue = Number(value);
+        return !isNaN(numericValue);
+      },
+    },
+    errorMessage: "Coordenada X inválida.",
+  },
+  coordinateY: {
+    custom: {
+      options: (value) => {
+        const numericValue = Number(value);
+        return !isNaN(numericValue);
+      },
+    },
+    errorMessage: "Coordenada Y inválida.",
   },
 };
 

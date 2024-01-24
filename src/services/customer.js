@@ -4,11 +4,14 @@ export default class CustomerService {
   }
 
   async getCustomers(params) {
-    const customers = await this.customerRepository.getCustomers(params);
-    return customers;
+    return await this.customerRepository.getCustomers(params);
   }
 
   async createCustomer(customer) {
     return await this.customerRepository.createCustomer(customer);
+  }
+
+  async getBestRoute(params) {
+    return await this.customerRepository.getBestRoute(params);
   }
 }

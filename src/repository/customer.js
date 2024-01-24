@@ -8,20 +8,14 @@ export default class CustomerRepository {
   }
 
   async getCustomers(params) {
-    const defaultQuery = this.getDefaultQuery();
-    let where = [defaultQuery];
+    const { where, values } = this.buildWhereClause(params);
 
-    const values = [];
-    if (params.search_term) {
-      const search = this.getSearchQuery(params.search_term);
-      where.push(`(${search.searchQuery})`);
-      values.push(...search.searchValues);
-    }
-
-    where = where.join(" AND ");
     const res = await this.customerDb.query(
-      "SELECT id, name, email, phone, created_at as createdAt FROM customers WHERE " +
-        where,
+      `SELECT id, name, email, phone, coordinate_x, coordinate_y, created_at 
+      FROM customers 
+      WHERE ${where}
+      ORDER BY id DESC
+      `,
       values
     );
     return res.rows?.map((item) => Customer.create(item));
@@ -31,22 +25,108 @@ export default class CustomerRepository {
     const data = Customer.toJson(customer);
 
     const { rows } = await this.customerDb.query(
-      "INSERT INTO customers (name, email, phone) values ($1, $2, $3)  RETURNING id",
-      [data.name, data.email, getOnlyNumbers(data.phone)]
+      `INSERT INTO customers (name, email, phone, coordinate_x, coordinate_y) 
+      VALUES ($1, $2, $3, $4, $5) 
+      RETURNING id`,
+      [
+        data.name,
+        data.email,
+        getOnlyNumbers(data.phone),
+        data.coordinateX,
+        data.coordinateY,
+      ]
     );
     return rows[0].id;
   }
 
-  getSearchQuery(search_term) {
+  async getBestRoute(params) {
+    const { where, values } = this.buildWhereClause(params);
+
+    const result = await this.customerDb.query(
+      `SELECT id, name, email, phone, coordinate_x, coordinate_y, created_at
+      FROM customers 
+      WHERE ${where}`,
+      values
+    );
+
+    let filteredCustomers = result.rows?.map((item) => {
+      const customer = Customer.create(item);
+      customer.calculateDistanceToOtherCustomers(result.rows);
+      return customer;
+    });
+    filteredCustomers = filteredCustomers.sort(
+      (a, b) => a.distanceToCompany - b.distanceToCompany
+    );
+    const bestRoute = this.calculateBestRoute(filteredCustomers);
+    return bestRoute;
+  }
+
+  calculateBestRoute(customers) {
+    const noVisitedCustomers = [...customers];
+    const visitedCustomers = [];
+    let totalDistance = 0;
+
+    // Add the starting customer to visited customers
+    visitedCustomers.push(noVisitedCustomers.shift());
+
+    while (noVisitedCustomers.length > 0) {
+      // Find the unvisited customer with the shortest distance to the company
+      const currentCustomer = noVisitedCustomers.reduce(
+        (minCustomer, customer) => {
+          return customer.distanceToCompany < minCustomer.distanceToCompany
+            ? customer
+            : minCustomer;
+        },
+        noVisitedCustomers[0]
+      );
+
+      // Iterate through adjacent customers
+      for (const adjacentCustomer of currentCustomer.distanceToOthers) {
+        const otherCustomer = customers.find(
+          (item) => item.id === adjacentCustomer.customerId
+        );
+
+        // Update distance to company if shorter
+        if (
+          otherCustomer.distanceToCompany >
+          currentCustomer.distanceToCompany + adjacentCustomer.distance
+        ) {
+          otherCustomer.distanceToCompany =
+            currentCustomer.distanceToCompany + adjacentCustomer.distance;
+        }
+      }
+
+      // Mark current customer as visited
+      visitedCustomers.push(currentCustomer);
+
+      const previousCustomer = visitedCustomers[visitedCustomers.length - 2];
+      const distanceBetweenCustomers = currentCustomer.distanceToOthers.find(
+        (item) => item.customerId === previousCustomer.id
+      )?.distance;
+
+      totalDistance += distanceBetweenCustomers;
+
+      // Remove current customer from noVisitedCustomers
+      const index = noVisitedCustomers.indexOf(currentCustomer);
+      if (index !== -1) {
+        noVisitedCustomers.splice(index, 1);
+      }
+    }
+    totalDistance +=
+      visitedCustomers[visitedCustomers.length - 1].distanceToCompany;
+    return { customers: visitedCustomers, totalDistance };
+  }
+
+  getSearchQuery(searchTerm) {
     const searchebleColumns = ["name", "email", "phone"];
 
     const searchArray = searchebleColumns.map((item, index) => {
-      return `customers.${item} LIKE $${index + 1}`;
+      return `customers.${item} ILIKE $${index + 1}`;
     });
 
     const searchQuery = searchArray.join(" OR ");
     const searchValues = Array(searchebleColumns.length).fill(
-      `%${search_term}%`
+      `%${searchTerm}%`
     );
 
     return { searchQuery, searchValues };
@@ -54,5 +134,21 @@ export default class CustomerRepository {
 
   getDefaultQuery() {
     return "customers.deleted_at IS NULL";
+  }
+
+  buildWhereClause(params) {
+    const defaultQuery = this.getDefaultQuery();
+    let where = [defaultQuery];
+
+    const values = [];
+    if (params.searchTerm) {
+      const search = this.getSearchQuery(params.searchTerm);
+      where.push(`(${search.searchQuery})`);
+      values.push(...search.searchValues);
+    }
+
+    where = where.join(" AND ");
+
+    return { where, values };
   }
 }
