@@ -13,7 +13,7 @@ git clone https://github.com/Tiago-Rocha09/teste_facilita_juridico.git teste_tia
 2. Navegue até o diretório do aplicativo:
 
 ```bash
-cd teste_tiago_rocha
+cd teste_tiago_rocha_back
 ```
 
 3. Instale as dependências:
@@ -31,10 +31,6 @@ npm run dev
 ```
 
 2. O servidor estará disponível em http://localhost:3333 por padrão.
-
-```bash
-cd teste_tiago_rocha
-```
 
 ## Configurações do Ambiente
 
